@@ -7,6 +7,20 @@ import plotly.graph_objects as go
 import plotly.express as px
 import millify as mil
 
+def style_negative(v, props=''):
+    """ Style negative values in dataframe"""
+    try: 
+        return props if v < 0 else None
+    except:
+        pass
+    
+def style_positive(v, props=''):
+    """Style positive values in dataframe"""
+    try: 
+        return props if v > 0 else None
+    except:
+        pass    
+
 @st.cache_data
 def load_data():
     """Loads in 4 dataframes and does light feature engineering"""
@@ -55,3 +69,14 @@ for i in metric_medians6mo.index:
         count += 1
         if (count >= 5): 
             count = 0
+
+df_agg['Publish_date'] = df_agg['Video publish time'].apply(lambda x: x.date())
+df_agg_final = df_agg.loc[:,['Video title','Publish_date','Views','Likes','Subscribers','Shares','Comments added','RPM(USD)','Average % viewed',
+                            'Avg_duration_sec', 'Engagement_ratio','Views / sub gained']]
+
+df_agg_numeric_lst = df_agg_final.iloc[:,2:].median().index.tolist()
+df_to_pct = {}
+for i in df_agg_numeric_lst:
+    df_to_pct[i] = '{:.1%}'.format
+
+st.dataframe(df_agg_final.style.hide().applymap(style_negative, props='color:red;').applymap(style_positive, props='color:green;').format(df_to_pct))
